@@ -1,0 +1,20 @@
+name: Magi backend
+on:
+  push:
+    branches: [main]
+    paths: ['resources/magi/backend/**', 'resources/magi/tests/*.py', '.github/workflows/magi-backend.yml']
+  pull_request:
+    paths: ['resources/magi/backend/**', 'resources/magi/tests/*.py', '.github/workflows/magi-backend.yml']
+permissions:
+  contents: read
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: sudo apt-get update && sudo apt-get install -y tmux
+      - run: python3 -m unittest discover -s resources/magi/tests -v
