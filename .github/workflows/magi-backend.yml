@@ -1,5 +1,6 @@
 name: Magi backend
 on:
+  workflow_dispatch:
   push:
     branches: [main]
     paths: ['resources/magi/backend/**', 'resources/magi/tests/*.py', '.github/workflows/magi-backend.yml']
