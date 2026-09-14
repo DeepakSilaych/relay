@@ -19,7 +19,7 @@ import time
 import uuid
 from urllib.parse import urlsplit, unquote
 
-VERSION = "0.2.7"
+VERSION = "0.2.8"
 DEFAULT_PREFERENCES = {
     "theme": "graphite", "accent": "mint", "font_family": "system",
     "font_size": 13, "line_height": 1.35, "terminal_padding": 18,

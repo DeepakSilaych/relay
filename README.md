@@ -1,29 +1,108 @@
 <p align="center"><img src="resources/magi/brand/icon.png" width="96" alt="Magi" /></p>
 <h1 align="center">Magi</h1>
-<p align="center">Multi-repo terminal workspaces for coding agents.</p>
+<p align="center">One workspace. Multiple repositories. Persistent coding agents.</p>
 
-[Download Magi](https://github.com/DeepakSilaych/orca/releases) · [Architecture and CLI](docs/magi/lite-v1.md)
+[Download](https://github.com/DeepakSilaych/magi/releases) · [Architecture & CLI](docs/magi/lite-v1.md) · [Contributing](CONTRIBUTING.md) · [MIT license](LICENSE)
 
-Magi builds on Orca's UI with sess-owned local and SSH sessions. Each workspace groups worktrees from several repositories, terminal tabs and nested splits, with files, diffs, Git status, PRs and attached Linear tickets in one window. Closing the app leaves sessions running on their execution host.
+Magi is a terminal workspace app for coding agents. Run agents locally or on an SSH-accessible VM, give each task worktrees across several repositories, and inspect every repository’s files, diffs, Git state, pull requests, and attached Linear ticket in one window.
 
-- Workspaces on the left, terminal tabs above, files and source control on the right.
-- A permanent **Genral** workspace on each host, with a file browser and multiple file tabs.
-- Cmd-click HTTP or HTTPS terminal URLs to open your browser, or existing file paths to open a file tab. Hold Cmd to underline available links; relative paths resolve against the terminal’s current directory on its execution host. File links support line and column numbers.
-- New or existing branches across selected repos, or blank workspaces that agents can attach repos to later.
-- GitHub cloning through `gh`; shared utility repositories without worktrees.
-- Drag anywhere on a workspace row or terminal tab to reorder it. Click to select; click its selected name again, double-click the name, press F2, or use Rename in its context menu.
-- Right-click workspaces, terminal tabs, file tabs, panes, files, and Git changes for context actions. Each terminal tab has its own explicit End session control; file tabs close independently.
-- Tab overflow stays navigable with All tabs and automatic scrolling; New terminal stays visible.
-- Host/workspace/terminal selection, open file tabs, editor scroll positions, and expanded file folders restore across restarts. File tabs deduplicate by canonical host path while keeping staged/working diffs separate.
-- Opening a file keeps terminal views attached. The cache retains at most three terminal groups, limited to twelve panes across cached groups (a larger active group remains intact).
-- File tabs support Reveal in file tree and Close other files; the tree highlights the active file and preserves expanded folders on refresh. Read-only previews and diff tabs are labeled explicitly.
-- Double-click split dividers to equalize panes. PRs use a compact menu; the changes count opens source control and an attached Linear ticket opens its URL.
-- Agent logos replace generic terminal icons for Claude Code, Codex, Gemini CLI, OpenCode, Aider, Amp, Droid, GitHub Copilot, Cursor Agent, and Pi. Detection uses foreground processes on the execution host, refreshes with workspace status, and falls back to the terminal icon when identity is unavailable. Logos are bundled locally.
-- Git changes and pull requests use colored status icons with descriptive hover labels.
-- Paste a Linear issue URL or ticket ID to attach verified Linear tickets during workspace creation or from the status bar. Install [schpet/linear-cli](https://github.com/schpet/linear-cli) and run `linear auth login` on each execution host; Magi refreshes live ticket status every minute.
-- Settings contains theme, terminal font size, compact rows and release updates.
+## Why Magi exists
 
-VM terminal selection uses the local clipboard: drag to select, then Cmd+C on macOS (Ctrl+Shift+C on Linux). Ctrl+C remains a terminal interrupt. Ordinary dragging selects locally even when an agent captures mouse input; hold Option/Alt to send clicks and drags to the agent. Magi enables mouse scrolling for its own tmux sessions so the wheel scrolls terminal history instead of sending arrow keys. Copy-path actions also use the native clipboard.
+Magi is a fork of [Orca](https://github.com/stablyai/orca). It was created to address the feature bloat and reliability problems we encountered in our terminal-first, multi-repository workflow. Magi retains Orca’s UI foundations and focuses the application on workspaces, terminals, files, and Git.
+
+Phone pairing, automation dashboards, task management, account onboarding, and unrelated settings are excluded from the active application. The inherited source and Git history remain for attribution and continued reuse; this is a focused application build, not yet a minimal source tree. See [NOTICE.md](NOTICE.md) for attribution.
+
+## Install
+
+**Apple Silicon · macOS 12 or newer**
+
+```sh
+brew install --cask deepaksilaych/tap/magi
+# Update an existing installation:
+brew update && brew upgrade --cask magi
+```
+
+You can also download a DMG or ZIP from [Releases](https://github.com/DeepakSilaych/magi/releases). Current builds are ad-hoc signed and strictly verified, but **not notarized by Apple**. macOS may require approval in System Settings → Privacy & Security. Automatic in-app installation remains disabled.
+
+Homebrew installs Git, GitHub CLI, tmux, and Python for local execution. Install your coding-agent CLI separately. Remote hosts need their own tools and an SSH alias; Magi can use sess presets. Native Windows sessions and Intel Mac/Linux desktop installers are not currently supported.
+
+## How it works
+
+1. **Choose an execution host.** Work locally or connect to a VM through SSH. Every host has a permanent `Genral` workspace.
+2. **Create a task workspace.** Select repositories and new or existing branches. Magi creates one worktree per selected repository inside the workspace folder. You can also start blank.
+3. **Run agents in terminals.** Each terminal attaches to a real sess/tmux session on its host. Split panes, reorder tabs, and work across repositories from the same task context.
+4. **Inspect and review.** Open files and diffs as tabs. Stage, unstage, and commit in the relevant repository. GitHub PR state comes from `gh`; Linear status comes from authenticated `linear` CLI requests.
+5. **Reconnect later.** Closing the desktop app detaches its terminals while host sessions keep running. Explicitly ending a terminal stops that session. Losing SSH connectivity makes its state unknown; it does not mean the agent exited.
+
+```mermaid
+flowchart LR
+  UI["Magi desktop: React + xterm + Monaco"] --> E[Electron bridge]
+  E --> L[Local Python backend]
+  E -->|SSH| V[VM Python backend]
+  L --> LS[sess / tmux sessions]
+  V --> VS[sess / tmux sessions]
+  L --> LR[Repository worktrees + Git]
+  V --> VR[Repository worktrees + Git]
+  L --> LC[gh / linear CLI]
+  V --> VC[gh / linear CLI]
+```
+
+The execution host owns its files, Git operations, workspace manifests, and agent processes. The desktop routes requests to that host rather than keeping agent ownership in a UI tab. PR and ticket queries use a separate worker so network requests do not block terminal attachment.
+
+### Workspace layout
+
+Local data defaults to `~/Documents/Magi`; a VM defaults to `~/magi`:
+
+```text
+magi/
+├── repos/                         # canonical clones, usually created with gh
+├── workspaces/<task>/
+│   ├── workspace.json             # repositories, terminals, layout, ticket
+│   ├── AGENTS.md                  # instructions and attached repository paths
+│   └── repos/
+│       ├── frontend/              # task worktree
+│       └── api/                   # task worktree
+├── util_repos/                    # shared utility repositories; no worktrees
+└── utils/                         # backend, agent CLI, sess state and registry
+```
+
+Existing repositories may also be registered in place. Shared utility repositories are intentionally shared. Worktrees provide working-directory isolation, not a security sandbox.
+
+### Agent CLI
+
+Magi installs its CLI on each configured execution host. Terminals receive the workspace context so agents can attach another repository without depending on an open desktop connection:
+
+```sh
+magi repo attach frontend --new-branch task/checkout --json
+magi repo attach api --new-branch task/checkout --json
+magi status --json
+magi ticket attach ENG-123 --json
+```
+
+A blank workspace creates worktrees when the agent explicitly attaches repositories. Magi does not intercept arbitrary file writes; the generated `AGENTS.md` tells agents to attach before editing.
+
+### Linear tickets
+
+Install [schpet/linear-cli](https://github.com/schpet/linear-cli) on the execution host and authenticate there:
+
+```sh
+linear auth login
+# On a headless VM without a system keyring:
+linear auth login --plaintext
+```
+
+The second command stores the credential unencrypted in the CLI’s configuration file. Enter the key in the CLI prompt.
+
+Paste a ticket ID or full Linear issue URL when creating a workspace or attaching a ticket later. Magi verifies it before saving, displays its live status and color, and refreshes while the app is visible. Invalid tickets do not replace an existing attachment or create an unwanted workspace.
+
+## Interface
+
+- **Left:** workspaces, host selection, filtering and reordering.
+- **Top:** terminal and file tabs; nested terminal splits.
+- **Right:** repository files and source control with colored status icons.
+- **Bottom:** host status, repository changes, PRs and the linked Linear issue.
+
+Sidebars and split panes resize by dragging. Selected names can be renamed by clicking again or using the context menu. Cmd-click opens HTTP/HTTPS links in the browser and existing file paths in a tab. Normal dragging selects terminal text locally, even when agents capture mouse input; Option/Alt sends mouse gestures to the application. Cmd+C copies; Ctrl+C interrupts.
 
 ## Keyboard shortcuts
 
@@ -41,35 +120,29 @@ Use Cmd on macOS; Ctrl on Linux.
 
 Splits can nest. Drag their dividers to resize; layouts and order survive restart. Closing an individual pane ends that session. Archiving an empty workspace retains its worktrees; Genral cannot be archived.
 
-## Install with Homebrew
-
-```sh
-brew install --cask deepaksilaych/tap/magi
-```
-
-Or run `brew tap deepaksilaych/tap`, then `brew install --cask magi`. Update with `brew update && brew upgrade --cask magi`.
-
-The cask installs Git, gh, tmux and Python for local sessions. Install your coding-agent CLI separately; remote hosts need their own tools and must be reachable through SSH.
-
-## macOS release
-
-**v0.2.7 supports Apple Silicon on macOS 12+.** It uses an ad-hoc signature with strict verification during packaging. It is **not Developer ID-signed or notarized**: macOS may still block first launch and require approval in System Settings → Privacy & Security. The tap does not disable Gatekeeper or remove quarantine.
-
-If a manual copy already exists in Applications, move that app aside before Homebrew installation. Workspace data is separate and retained. Direct DMG and ZIP downloads are also available from Releases. Automatic in-app installation remains disabled until signed updates are available.
-
-Both sidebars resize by dragging their inner edges; the top-right buttons hide or restore them. Widths and visibility persist. Shift+Enter uses Orca's non-submit terminal encoding.
-
-Native Windows sessions are not supported. Intel Mac and Linux desktop installers are not included in this release.
-
 ## Development
 
 ```sh
+gh repo clone DeepakSilaych/magi
+cd magi
 pnpm install
 pnpm dev
-# Host Apple Silicon release:
+```
+
+Use the pnpm version pinned in `package.json`. The active entry points live in `src/main/magi`, `src/preload/magi`, and `src/renderer/src/magi`; the dependency-free host backend is `resources/magi/backend/magi.py`.
+
+```sh
+pnpm build
+python3 -m unittest discover -s resources/magi/tests -v
+node --test resources/magi/tests/updates.test.cjs
+# Apple Silicon release, on macOS:
 pnpm release:magi:mac
 ```
 
-Release packaging stages only Magi's compiled app and node-pty. Upstream mobile, task, automation and account UI is excluded from the active build. Run `pnpm run ensure:electron-runtime` before packaging if native dependencies were rebuilt for Node.
+Packaging includes Magi’s compiled app, node-pty, and its host backend. Monaco loads when needed; terminal views are retained within a bounded cache when switching to files. See [the architecture guide](docs/magi/lite-v1.md) for data paths, session ownership, and test isolation, and [CONTRIBUTING.md](CONTRIBUTING.md) before changing code.
 
-See [the architecture guide](docs/magi/lite-v1.md) for host paths, CLI usage and verification. Magi is an MIT-licensed fork of [Orca](https://github.com/stablyai/orca); upstream code and attribution remain in the repository. The bundled sess license is in `resources/magi/backend/SESS-LICENSE`.
+## Project origins
+
+Magi is independently maintained by [Deepak Silaych](https://github.com/DeepakSilaych). It derives from Orca and uses [sess](https://github.com/DeepakSilaych/sess) for persistent sessions. Original copyright notices and licenses are preserved. Magi changes are also released under the MIT license.
+
+Releases before this repository was established remain in the [original development fork](https://github.com/DeepakSilaych/orca/releases).

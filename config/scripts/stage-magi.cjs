@@ -13,7 +13,7 @@ writeFileSync(
     {
       packageManager: 'npm@11.11.0',
       name: 'magi',
-      version: '0.2.7',
+      version: '0.2.8',
       description: 'Multi-repo terminal workspaces for coding agents',
       author: 'Deepak Silaych',
       license: 'MIT',

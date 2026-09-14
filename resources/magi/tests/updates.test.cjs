@@ -16,7 +16,7 @@ function fixture({ packaged = true, signed = true, result, failure } = {}) {
     deferred = []
   const updater = Object.assign(new EventEmitter(), {
     setFeedURL(value) {
-      assert.equal(value.repo, 'orca')
+      assert.equal(value.repo, 'magi')
     },
     async checkForUpdates() {
       calls.checks++

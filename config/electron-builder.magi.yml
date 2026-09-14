@@ -4,7 +4,7 @@ artifactName: Magi-${version}-${arch}.${ext}
 extraMetadata:
   magiAutoUpdate: false
   name: magi
-  version: 0.2.7
+  version: 0.2.8
   main: out/magi/main/index.js
 npmRebuild: false
 directories:
@@ -41,4 +41,4 @@ linux:
 publish:
   provider: github
   owner: DeepakSilaych
-  repo: orca
+  repo: magi

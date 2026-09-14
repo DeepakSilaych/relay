@@ -1,9 +1,16 @@
 {
-  "name": "orca",
+  "name": "magi",
   "version": "1.4.197",
   "description": "Next-gen IDE for parallel agentic development",
-  "homepage": "https://github.com/stablyai/orca",
+  "homepage": "https://github.com/DeepakSilaych/magi",
+  "bugs": {
+    "url": "https://github.com/DeepakSilaych/magi/issues"
+  },
   "author": "stablyai",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DeepakSilaych/magi.git"
+  },
   "bin": {
     "magi": "./resources/magi/backend/magi.py"
   },

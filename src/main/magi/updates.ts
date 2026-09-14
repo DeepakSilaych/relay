@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { autoUpdater } from 'electron-updater'
 import type { UpdateState } from '../../shared/magi/types'
-const releaseUrl = 'https://github.com/DeepakSilaych/orca/releases'
+const releaseUrl = 'https://github.com/DeepakSilaych/magi/releases'
 export function createUpdates(publish: (state: UpdateState) => void) {
   const supported =
     app.isPackaged &&
@@ -12,7 +12,7 @@ export function createUpdates(publish: (state: UpdateState) => void) {
         true)
   let state: UpdateState = {
     phase: supported ? 'idle' : 'unsupported',
-    version: app.isPackaged ? app.getVersion() : '0.2.7-dev',
+    version: app.isPackaged ? app.getVersion() : '0.2.8-dev',
     message:
       app.isPackaged && !supported
         ? 'This build is not Developer ID-signed. Install updates from View releases; automatic installation requires a signed build.'
@@ -29,7 +29,7 @@ export function createUpdates(publish: (state: UpdateState) => void) {
   autoUpdater.autoDownload = false
   autoUpdater.autoInstallOnAppQuit = false
   autoUpdater.allowDowngrade = false
-  autoUpdater.setFeedURL({ provider: 'github', owner: 'DeepakSilaych', repo: 'orca' })
+  autoUpdater.setFeedURL({ provider: 'github', owner: 'DeepakSilaych', repo: 'magi' })
   autoUpdater.on('error', (error) => update({ phase: 'error', message: error.message }))
   autoUpdater.on('download-progress', (progress) =>
     update({ phase: 'downloading', percent: progress.percent, message: 'Downloading update…' })
