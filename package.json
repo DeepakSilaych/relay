@@ -1,12 +1,12 @@
 {
   "name": "magi",
-  "version": "1.4.197",
-  "description": "Next-gen IDE for parallel agentic development",
+  "version": "0.2.8",
+  "description": "Persistent terminal workspaces for coding agents across multiple repositories",
   "homepage": "https://github.com/DeepakSilaych/magi",
   "bugs": {
     "url": "https://github.com/DeepakSilaych/magi/issues"
   },
-  "author": "stablyai",
+  "author": "Deepak Silaych",
   "repository": {
     "type": "git",
     "url": "https://github.com/DeepakSilaych/magi.git"
