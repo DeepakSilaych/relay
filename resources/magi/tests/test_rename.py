@@ -21,7 +21,7 @@ class RenameTests(unittest.TestCase):
         self.assertEqual(renamed['repos'], before['repos'])
         self.assertEqual(renamed['terminals'][0]['id'], terminal['id'])
         self.assertEqual(renamed['terminals'][0]['cwd'], terminal['cwd'])
-        self.assertIn('Magi workspace: After', (self.backend.ws_path(ws['id']) / 'AGENTS.md').read_text())
+        self.assertIn('Relay workspace: After', (self.backend.ws_path(ws['id']) / 'AGENTS.md').read_text())
         self.assertEqual(test_backend.magi.Backend(self.backend.root).ws(ws['id'])['name'], 'After')
 
     def test_rejects_invalid_names_and_protects_general(self):
@@ -32,3 +32,13 @@ class RenameTests(unittest.TestCase):
         with self.assertRaises(ValueError): self.backend.workspace_rename('genral', 'Changed')
         with self.assertRaises(ValueError): self.backend.terminal_rename(ws['id'], 'missing', 'Changed')
         self.assertEqual(self.backend.ws(ws['id'])['name'], 'Before')
+
+    def test_relay_cli_keeps_magi_alias(self):
+        import os
+        result = self.backend.install_cli()
+        relay = self.backend.root / 'utils' / 'bin' / 'relay'
+        legacy = relay.with_name('magi')
+        self.assertEqual(result['path'], str(relay))
+        self.assertEqual(relay.read_bytes(), legacy.read_bytes())
+        self.assertTrue(os.access(relay, os.X_OK))
+        self.assertTrue(os.access(legacy, os.X_OK))

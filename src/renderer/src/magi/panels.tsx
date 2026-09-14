@@ -53,7 +53,7 @@ export function WorkspaceHeader({
         className={`flex items-center gap-2 text-sm font-semibold ${navigator.platform.includes('Mac') ? 'ml-20' : ''}`}
       >
         <img src={magiIcon} alt="" className="size-5" />
-        Magi
+        Relay
       </span>
       <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
         {host === 'local' ? 'Local' : host}

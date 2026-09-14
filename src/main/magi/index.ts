@@ -11,7 +11,7 @@ configureHomebrewPath(app.isPackaged)
 const profile = process.env.MAGI_USER_DATA_PATH || join(app.getPath('appData'), 'magi-orca')
 mkdirSync(profile, { recursive: true })
 app.setPath('userData', profile)
-app.setName('Magi')
+app.setName('Relay')
 const ownsLock = app.requestSingleInstanceLock()
 if (!ownsLock) {
   app.quit()
@@ -178,7 +178,7 @@ if (ownsLock) {
     })
     Menu.setApplicationMenu(
       Menu.buildFromTemplate([
-        { label: 'Magi', submenu: [{ role: 'about' }, { type: 'separator' }, { role: 'quit' }] },
+        { label: 'Relay', submenu: [{ role: 'about' }, { type: 'separator' }, { role: 'quit' }] },
         {
           label: 'Workspace',
           submenu: (
@@ -219,7 +219,7 @@ if (ownsLock) {
       height: 920,
       minWidth: 900,
       minHeight: 560,
-      title: 'Magi',
+      title: 'Relay',
       titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
       show: false,
       webPreferences: {

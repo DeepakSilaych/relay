@@ -37,7 +37,7 @@ export function SessionConfirmation({
           <DialogDescription>
             {kind === 'archive'
               ? 'Worktrees and running sessions are retained on the host. This removes the workspace from the sidebar.'
-              : 'This stops the shell and any agents running in this terminal. Switching tabs or closing Magi keeps sessions running.'}
+              : 'This stops the shell and any agents running in this terminal. Switching tabs or closing Relay keeps sessions running.'}
           </DialogDescription>
         </DialogHeader>
         <div className="flex justify-end gap-2">

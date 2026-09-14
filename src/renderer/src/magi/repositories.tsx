@@ -291,7 +291,7 @@ export function Repositories(props: Props) {
         {props.statuses.length === 0 && view !== 'files' && (
           <p className="p-4 text-xs leading-relaxed text-muted-foreground">
             Attach repositories to browse files and changes. Blank workspaces can attach worktrees
-            later through the Magi CLI.
+            later through the Relay CLI.
           </p>
         )}
       </div>

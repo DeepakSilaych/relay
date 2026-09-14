@@ -1,15 +1,15 @@
 {
-  "name": "magi",
-  "version": "0.2.8",
+  "name": "relay",
+  "version": "0.2.9",
   "description": "Persistent terminal workspaces for coding agents across multiple repositories",
-  "homepage": "https://github.com/DeepakSilaych/magi",
+  "homepage": "https://github.com/DeepakSilaych/relay",
   "bugs": {
-    "url": "https://github.com/DeepakSilaych/magi/issues"
+    "url": "https://github.com/DeepakSilaych/relay/issues"
   },
   "author": "Deepak Silaych",
   "repository": {
     "type": "git",
-    "url": "https://github.com/DeepakSilaych/magi.git"
+    "url": "https://github.com/DeepakSilaych/relay.git"
   },
   "bin": {
     "magi": "./resources/magi/backend/magi.py"

@@ -1,12 +1,12 @@
-# Contributing to Magi
+# Contributing to Relay
 
-Magi focuses on persistent agent terminals, multi-repository workspaces, and files/Git workflows. Open an issue before proposing a broad new product area.
+Relay focuses on persistent agent terminals, multi-repository workspaces, and files/Git workflows. Open an issue before proposing a broad new product area.
 
 ## Start here
 
 Read [AGENTS.md](AGENTS.md), [the style guide](docs/STYLEGUIDE.md), and [the architecture guide](docs/magi/lite-v1.md). Preserve Orca and third-party attribution. Reuse existing UI primitives and design tokens.
 
-Use the pnpm version in `package.json`, run `pnpm install`, and start with `pnpm dev`. Only Magi entry points are part of the active app. Inherited upstream source remains available for reuse.
+Use the pnpm version in `package.json`, run `pnpm install`, and start with `pnpm dev`. Only Relay entry points are part of the active app. Inherited upstream source remains available for reuse.
 
 ## Verify changes
 

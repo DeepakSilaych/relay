@@ -12,8 +12,8 @@ writeFileSync(
   JSON.stringify(
     {
       packageManager: 'npm@11.11.0',
-      name: 'magi',
-      version: '0.2.8',
+      name: 'relay',
+      version: '0.2.9',
       description: 'Multi-repo terminal workspaces for coding agents',
       author: 'Deepak Silaych',
       license: 'MIT',
@@ -33,4 +33,4 @@ for (const item of ['package.json', 'LICENSE', 'lib', 'build/Release']) {
 }
 const addon = dirname(require.resolve('node-addon-api/package.json', { paths: [pty] }))
 cpSync(addon, join(stage, 'node_modules/node-addon-api'), { recursive: true })
-console.log('Staged Magi with node-pty; other runtime modules are bundled by Vite.')
+console.log('Staged Relay with node-pty; other runtime modules are bundled by Vite.')

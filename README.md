@@ -1,14 +1,14 @@
-<p align="center"><img src="resources/magi/brand/icon.png" width="96" alt="Magi" /></p>
-<h1 align="center">Magi</h1>
+<p align="center"><img src="resources/magi/brand/icon.png" width="96" alt="Relay" /></p>
+<h1 align="center">Relay</h1>
 <p align="center">One workspace. Multiple repositories. Persistent coding agents.</p>
 
-[Download](https://github.com/DeepakSilaych/magi/releases) · [Architecture & CLI](docs/magi/lite-v1.md) · [Contributing](CONTRIBUTING.md) · [MIT license](LICENSE)
+[Download](https://github.com/DeepakSilaych/relay/releases) · [Architecture & CLI](docs/magi/lite-v1.md) · [Contributing](CONTRIBUTING.md) · [MIT license](LICENSE)
 
-Magi is a terminal workspace app for coding agents. Run agents locally or on an SSH-accessible VM, give each task worktrees across several repositories, and inspect every repository’s files, diffs, Git state, pull requests, and attached Linear ticket in one window.
+Relay is a terminal workspace app for coding agents. Run agents locally or on an SSH-accessible VM, give each task worktrees across several repositories, and inspect every repository’s files, diffs, Git state, pull requests, and attached Linear ticket in one window.
 
-## Why Magi exists
+## Why Relay exists
 
-Magi is a fork of [Orca](https://github.com/stablyai/orca). It was created to address the feature bloat and reliability problems we encountered in our terminal-first, multi-repository workflow. Magi retains Orca’s UI foundations and focuses the application on workspaces, terminals, files, and Git.
+Relay is a fork of [Orca](https://github.com/stablyai/orca). It was created to address the feature bloat and reliability problems we encountered in our terminal-first, multi-repository workflow. Relay retains Orca’s UI foundations and focuses the application on workspaces, terminals, files, and Git.
 
 Phone pairing, automation dashboards, task management, account onboarding, and unrelated settings are excluded from the active application. The inherited source and Git history remain for attribution and continued reuse; this is a focused application build, not yet a minimal source tree. See [NOTICE.md](NOTICE.md) for attribution.
 
@@ -17,26 +17,26 @@ Phone pairing, automation dashboards, task management, account onboarding, and u
 **Apple Silicon · macOS 12 or newer**
 
 ```sh
-brew install --cask deepaksilaych/tap/magi
+brew install --cask deepaksilaych/tap/relay
 # Update an existing installation:
-brew update && brew upgrade --cask magi
+brew update && brew upgrade --cask relay
 ```
 
-You can also download a DMG or ZIP from [Releases](https://github.com/DeepakSilaych/magi/releases). Current builds are ad-hoc signed and strictly verified, but **not notarized by Apple**. macOS may require approval in System Settings → Privacy & Security. Automatic in-app installation remains disabled.
+You can also download a DMG or ZIP from [Releases](https://github.com/DeepakSilaych/relay/releases). Current builds are ad-hoc signed and strictly verified, but **not notarized by Apple**. macOS may require approval in System Settings → Privacy & Security. Automatic in-app installation remains disabled.
 
-Homebrew installs Git, GitHub CLI, tmux, and Python for local execution. Install your coding-agent CLI separately. Remote hosts need their own tools and an SSH alias; Magi can use sess presets. Native Windows sessions and Intel Mac/Linux desktop installers are not currently supported.
+Homebrew installs Git, GitHub CLI, tmux, and Python for local execution. Install your coding-agent CLI separately. Remote hosts need their own tools and an SSH alias; Relay can use sess presets. Native Windows sessions and Intel Mac/Linux desktop installers are not currently supported.
 
 ## How it works
 
 1. **Choose an execution host.** Work locally or connect to a VM through SSH. Every host has a permanent `Genral` workspace.
-2. **Create a task workspace.** Select repositories and new or existing branches. Magi creates one worktree per selected repository inside the workspace folder. You can also start blank.
+2. **Create a task workspace.** Select repositories and new or existing branches. Relay creates one worktree per selected repository inside the workspace folder. You can also start blank.
 3. **Run agents in terminals.** Each terminal attaches to a real sess/tmux session on its host. Split panes, reorder tabs, and work across repositories from the same task context.
 4. **Inspect and review.** Open files and diffs as tabs. Stage, unstage, and commit in the relevant repository. GitHub PR state comes from `gh`; Linear status comes from authenticated `linear` CLI requests.
 5. **Reconnect later.** Closing the desktop app detaches its terminals while host sessions keep running. Explicitly ending a terminal stops that session. Losing SSH connectivity makes its state unknown; it does not mean the agent exited.
 
 ```mermaid
 flowchart LR
-  UI["Magi desktop: React + xterm + Monaco"] --> E[Electron bridge]
+  UI["Relay desktop: React + xterm + Monaco"] --> E[Electron bridge]
   E --> L[Local Python backend]
   E -->|SSH| V[VM Python backend]
   L --> LS[sess / tmux sessions]
@@ -70,16 +70,16 @@ Existing repositories may also be registered in place. Shared utility repositori
 
 ### Agent CLI
 
-Magi installs its CLI on each configured execution host. Terminals receive the workspace context so agents can attach another repository without depending on an open desktop connection:
+Relay installs its CLI on each configured execution host. Terminals receive the workspace context so agents can attach another repository without depending on an open desktop connection:
 
 ```sh
-magi repo attach frontend --new-branch task/checkout --json
-magi repo attach api --new-branch task/checkout --json
-magi status --json
-magi ticket attach ENG-123 --json
+relay repo attach frontend --new-branch task/checkout --json
+relay repo attach api --new-branch task/checkout --json
+relay status --json
+relay ticket attach ENG-123 --json
 ```
 
-A blank workspace creates worktrees when the agent explicitly attaches repositories. Magi does not intercept arbitrary file writes; the generated `AGENTS.md` tells agents to attach before editing.
+A blank workspace creates worktrees when the agent explicitly attaches repositories. Relay does not intercept arbitrary file writes; the generated `AGENTS.md` tells agents to attach before editing.
 
 ### Linear tickets
 
@@ -93,7 +93,7 @@ linear auth login --plaintext
 
 The second command stores the credential unencrypted in the CLI’s configuration file. Enter the key in the CLI prompt.
 
-Paste a ticket ID or full Linear issue URL when creating a workspace or attaching a ticket later. Magi verifies it before saving, displays its live status and color, and refreshes while the app is visible. Invalid tickets do not replace an existing attachment or create an unwanted workspace.
+Paste a ticket ID or full Linear issue URL when creating a workspace or attaching a ticket later. Relay verifies it before saving, displays its live status and color, and refreshes while the app is visible. Invalid tickets do not replace an existing attachment or create an unwanted workspace.
 
 ## Interface
 
@@ -123,8 +123,8 @@ Splits can nest. Drag their dividers to resize; layouts and order survive restar
 ## Development
 
 ```sh
-gh repo clone DeepakSilaych/magi
-cd magi
+gh repo clone DeepakSilaych/relay
+cd relay
 pnpm install
 pnpm dev
 ```
@@ -139,10 +139,14 @@ node --test resources/magi/tests/updates.test.cjs
 pnpm release:magi:mac
 ```
 
-Packaging includes Magi’s compiled app, node-pty, and its host backend. Monaco loads when needed; terminal views are retained within a bounded cache when switching to files. See [the architecture guide](docs/magi/lite-v1.md) for data paths, session ownership, and test isolation, and [CONTRIBUTING.md](CONTRIBUTING.md) before changing code.
+Packaging includes Relay’s compiled app, node-pty, and its host backend. Monaco loads when needed; terminal views are retained within a bounded cache when switching to files. See [the architecture guide](docs/magi/lite-v1.md) for data paths, session ownership, and test isolation, and [CONTRIBUTING.md](CONTRIBUTING.md) before changing code.
+
+## Renamed from Magi
+
+Relay was previously called Magi. Existing workspace folders, sess/tmux identifiers, preferences, and the application identifier stay unchanged. The `relay` agent command is the new name; `magi` remains an alias. Earlier downloads retain their original names.
 
 ## Project origins
 
-Magi is independently maintained by [Deepak Silaych](https://github.com/DeepakSilaych). It derives from Orca and uses [sess](https://github.com/DeepakSilaych/sess) for persistent sessions. Original copyright notices and licenses are preserved. Magi changes are also released under the MIT license.
+Relay is independently maintained by [Deepak Silaych](https://github.com/DeepakSilaych). It derives from Orca and uses [sess](https://github.com/DeepakSilaych/sess) for persistent sessions. Original copyright notices and licenses are preserved. Relay changes are also released under the MIT license.
 
 Releases before this repository was established remain in the [original development fork](https://github.com/DeepakSilaych/orca/releases).

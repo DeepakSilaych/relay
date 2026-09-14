@@ -19,7 +19,7 @@ import time
 import uuid
 from urllib.parse import urlsplit, unquote
 
-VERSION = "0.2.8"
+VERSION = "0.2.9"
 DEFAULT_PREFERENCES = {
     "theme": "graphite", "accent": "mint", "font_family": "system",
     "font_size": 13, "line_height": 1.35, "terminal_padding": 18,
@@ -354,8 +354,8 @@ class Backend:
         return {"workspace": self.ws(wid), "errors": errors}
 
     def context(self, ws):
-        lines = ["# Magi workspace: " + ws["name"], "", "Run agents from this workspace. Each task repository must be attached before editing.",
-                 "Use `magi repo attach NAME --new-branch task/NAME --base HEAD --json` to create a worktree.",
+        lines = ["# Relay workspace: " + ws["name"], "", "Run agents from this workspace. Each task repository must be attached before editing.",
+                 "Use `relay repo attach NAME --new-branch task/NAME --base HEAD --json` to create a worktree.",
                  "Edit only the returned worktree path. Do not edit canonical clones for task work.",
                  "A Git worktree is isolation by convention, not a security sandbox.", "", "## Attached repositories"]
         lines.extend("- " + r["id"] + ": " + r["path"] + " (" + r["branch"] + ")" for r in ws["repos"])
@@ -570,9 +570,12 @@ class Backend:
             if src != dest and (not dest.exists() or src.read_bytes() != dest.read_bytes()): shutil.copy2(src, dest)
         binary = self.root / "utils" / "bin"
         binary.mkdir(exist_ok=True)
-        launcher = binary / "magi"
+        launcher = binary / "relay"
         launcher.write_text("#!/bin/sh\nexec python3 " + shlex.quote(str(folder / "magi.py")) + " \"$@\"\n")
         launcher.chmod(0o755)
+        legacy = binary / "magi"
+        legacy.write_text(launcher.read_text())
+        legacy.chmod(0o755)
         return {"path": str(launcher)}
 
     def status_one(self, row):
@@ -797,7 +800,7 @@ def rpc(backend):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Magi — multi-repo agent workspaces")
+    parser = argparse.ArgumentParser(description="Relay — multi-repo agent workspaces")
     parser.add_argument("--root", default=os.environ.get("MAGI_ROOT"))
     parser.add_argument("--workspace", default=os.environ.get("MAGI_WORKSPACE"))
     parser.add_argument("--json", action="store_true")

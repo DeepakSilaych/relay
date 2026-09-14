@@ -70,7 +70,7 @@ export function UpdateSettings() {
       <p className="text-xs text-muted-foreground">
         {state?.phase === 'unsupported'
           ? 'Replacing the app preserves your workspaces and running terminal sessions.'
-          : 'Installs the latest release and restarts Magi. Terminal sessions keep running.'}
+          : 'Installs the latest release and restarts Relay. Terminal sessions keep running.'}
       </p>
     </section>
   )

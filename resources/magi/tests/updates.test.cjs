@@ -16,7 +16,7 @@ function fixture({ packaged = true, signed = true, result, failure } = {}) {
     deferred = []
   const updater = Object.assign(new EventEmitter(), {
     setFeedURL(value) {
-      assert.equal(value.repo, 'magi')
+      assert.equal(value.repo, 'relay')
     },
     async checkForUpdates() {
       calls.checks++
@@ -84,9 +84,9 @@ test('no update, wrong product and network errors do not download or install', a
     assert.equal(f.calls.installs, 0)
   }
 })
-test('a Magi update downloads once, reports progress, then schedules install', async () => {
+test('a Relay update downloads once, reports progress, then schedules install', async () => {
   const f = fixture({
-    result: { isUpdateAvailable: true, updateInfo: { files: [{ url: 'Magi-0.3.0-arm64.zip' }] } }
+    result: { isUpdateAvailable: true, updateInfo: { files: [{ url: 'Relay-0.3.0-arm64.zip' }] } }
   })
   await Promise.all([f.service.run(), f.service.run()])
   assert.equal(f.calls.checks, 1)
