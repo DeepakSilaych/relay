@@ -1,4 +1,4 @@
-name: Magi backend
+name: Relay backend
 on:
   workflow_dispatch:
   push:
