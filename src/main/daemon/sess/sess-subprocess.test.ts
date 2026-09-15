@@ -17,7 +17,7 @@ posix('sess durable process ownership', () => {
       SHELL: '/bin/bash',
       TERM: 'xterm-256color',
       ORCA_SESS_DIR: root,
-      ORCA_SESS_EXECUTABLE: resolve('resources/magi/sess')
+      ORCA_SESS_EXECUTABLE: resolve('resources/relay/backend/sess-legacy')
     }
     const opts = {
       sessionId: 'durable-pane',

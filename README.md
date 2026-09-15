@@ -1,8 +1,8 @@
-<p align="center"><img src="resources/magi/brand/icon.png" width="96" alt="Relay" /></p>
+<p align="center"><img src="resources/relay/brand/icon.png" width="96" alt="Relay" /></p>
 <h1 align="center">Relay</h1>
 <p align="center">One workspace. Multiple repositories. Persistent coding agents.</p>
 
-[Download](https://github.com/DeepakSilaych/relay/releases) · [Architecture & CLI](docs/magi/lite-v1.md) · [Contributing](CONTRIBUTING.md) · [MIT license](LICENSE)
+[Download](https://github.com/DeepakSilaych/relay/releases) · [Architecture & CLI](docs/relay/lite-v1.md) · [Contributing](CONTRIBUTING.md) · [MIT license](LICENSE)
 
 Relay is a terminal workspace app for coding agents. Run agents locally or on an SSH-accessible VM, give each task worktrees across several repositories, and inspect every repository’s files, diffs, Git state, pull requests, and attached Linear ticket in one window.
 
@@ -51,10 +51,10 @@ The execution host owns its files, Git operations, workspace manifests, and agen
 
 ### Workspace layout
 
-Local data defaults to `~/Documents/Magi`; a VM defaults to `~/magi`:
+Local data defaults to `~/Documents/Relay`; a VM defaults to `~/relay`:
 
 ```text
-magi/
+relay/
 ├── repos/                         # canonical clones, usually created with gh
 ├── workspaces/<task>/
 │   ├── workspace.json             # repositories, terminals, layout, ticket
@@ -129,21 +129,27 @@ pnpm install
 pnpm dev
 ```
 
-Use the pnpm version pinned in `package.json`. The active entry points live in `src/main/magi`, `src/preload/magi`, and `src/renderer/src/magi`; the dependency-free host backend is `resources/magi/backend/magi.py`.
+Use the pnpm version pinned in `package.json`. The active entry points live in `src/main/relay`, `src/preload/relay`, and `src/renderer/src/relay`; the dependency-free host backend is `resources/relay/backend/relay.py`.
 
 ```sh
 pnpm build
-python3 -m unittest discover -s resources/magi/tests -v
-node --test resources/magi/tests/updates.test.cjs
+python3 -m unittest discover -s resources/relay/tests -v
+node --test resources/relay/tests/updates.test.cjs
 # Apple Silicon release, on macOS:
-pnpm release:magi:mac
+pnpm release:relay:mac
 ```
 
-Packaging includes Relay’s compiled app, node-pty, and its host backend. Monaco loads when needed; terminal views are retained within a bounded cache when switching to files. See [the architecture guide](docs/magi/lite-v1.md) for data paths, session ownership, and test isolation, and [CONTRIBUTING.md](CONTRIBUTING.md) before changing code.
+Packaging includes Relay’s compiled app, node-pty, and its host backend. Monaco loads when needed; terminal views are retained within a bounded cache when switching to files. See [the architecture guide](docs/relay/lite-v1.md) for data paths, session ownership, and test isolation, and [CONTRIBUTING.md](CONTRIBUTING.md) before changing code.
 
-## Renamed from Magi
+## Renamed from Relay
 
-Relay was previously called Magi. Existing workspace folders, sess/tmux identifiers, preferences, and the application identifier stay unchanged. The `relay` agent command is the new name; `magi` remains an alias. Earlier downloads retain their original names.
+Relay was previously called Magi. Version 0.3.0 moves the default local data directory to `~/Documents/Relay`, the VM directory to `~/relay`, and the desktop profile to `~/Library/Application Support/relay`. Old directories become compatibility symlinks, so existing agent processes can still use their original paths. Workspace IDs and live tmux processes are preserved. New sessions use `relay-` IDs; old `magi-` IDs remain valid until those sessions end. The primary CLI is `relay`, with `RELAY_ROOT` and `RELAY_WORKSPACE`; the old CLI/environment names remain compatibility aliases.
+
+### Files and sess 0.7.0
+
+Drop up to eight regular files (25 MiB total) into a terminal. Local terminals receive quoted local paths. VM terminals use the bundled, checksum-verified sess 0.7.0 client to upload over SSH and insert remote paths. Relay never presses Enter. The first transfer updates the selected host's sess helper using `sess init`. Uploaded files are private, checksum-verified, and retained under `~/.local/share/sess/uploads/` until deleted.
+
+sess 0.7.0 uses zmx for its own new sessions. Relay currently retains its tmux session adapter to preserve running agents and terminal scrolling; file uploads use the new sess client independently. Live tmux sessions cannot be converted into zmx sessions. Clipboard image pixels and folder drops are not supported.
 
 ## Project origins
 

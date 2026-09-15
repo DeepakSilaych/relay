@@ -1,6 +1,6 @@
 {
   "name": "relay",
-  "version": "0.2.9",
+  "version": "0.3.0",
   "description": "Persistent terminal workspaces for coding agents across multiple repositories",
   "homepage": "https://github.com/DeepakSilaych/relay",
   "bugs": {
@@ -12,9 +12,9 @@
     "url": "https://github.com/DeepakSilaych/relay.git"
   },
   "bin": {
-    "magi": "./resources/magi/backend/magi.py"
+    "relay": "./resources/relay/backend/relay.py"
   },
-  "main": "./out/magi/main/index.js",
+  "main": "./out/relay/main/index.js",
   "scripts": {
     "install:release": "pnpm install --frozen-lockfile --cpu=current,x64,arm64",
     "audit:perf": "oxlint --config config/oxlint-performance-audit.json --format json src",
@@ -69,11 +69,11 @@
     "typecheck:tsc:web": "tsc --noEmit -p config/tsconfig.web.json --composite false",
     "typecheck:tsc": "tsc --noEmit -p config/tsconfig.node.json --composite false && tsc --noEmit -p config/tsconfig.cli.json --composite false && tsc --noEmit -p config/tsconfig.web.json --composite false",
     "ensure:electron-runtime": "node config/scripts/ensure-native-runtime.mjs --runtime=electron",
-    "start": "pnpm run ensure:electron-runtime && electron-vite preview --config magi.vite.config.ts",
-    "dev": "pnpm run ensure:electron-runtime && electron-vite dev --config magi.vite.config.ts",
+    "start": "pnpm run ensure:electron-runtime && electron-vite preview --config relay.vite.config.ts",
+    "dev": "pnpm run ensure:electron-runtime && electron-vite dev --config relay.vite.config.ts",
     "dev-stable-name": "pnpm dev",
     "dev:web": "vite --config vite.web.config.ts --host 127.0.0.1",
-    "build:relay": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON config/scripts/build-relay.mjs",
+    "build:orca-runtime": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON config/scripts/build-relay.mjs",
     "build:computer-macos": "node config/scripts/build-computer-macos.mjs",
     "build:keyboard-layout-macos": "node config/scripts/build-keyboard-layout-macos.mjs",
     "build:notification-status-macos": "node config/scripts/build-notification-status-macos.mjs",
@@ -98,7 +98,7 @@
     "build:web": "node config/scripts/run-vite-web-build.mjs && node config/scripts/verify-web-build.mjs",
     "build:web-from-renderer": "node config/scripts/project-renderer-web-client.mjs && node config/scripts/verify-web-build.mjs",
     "build:desktop": "pnpm run typecheck && pnpm run build:relay && pnpm run build:cli && pnpm run build:electron-vite && pnpm run verify:built-skills-cli && pnpm run build:web-from-renderer",
-    "build": "electron-vite build --config magi.vite.config.ts",
+    "build": "electron-vite build --config relay.vite.config.ts",
     "build:release": "pnpm run build:relay && pnpm run build:native && pnpm run verify:computer-native && pnpm run build:cli && pnpm run build:electron-vite && pnpm run verify:built-skills-cli && pnpm run build:web-from-renderer",
     "build:release:parallel": "pnpm run build:relay && pnpm run build:native && pnpm run verify:computer-native && pnpm run build:cli && pnpm run build:electron-vite:parallel && pnpm run verify:built-skills-cli && pnpm run build:web-from-renderer",
     "postinstall": "node config/scripts/rebuild-native-deps.mjs",
@@ -169,10 +169,10 @@
     "test:e2e:ssh-docker-bulk-open-freeze": "node config/scripts/run-ssh-docker-bulk-open-freeze-e2e.mjs",
     "repro:live-remote-bulk-open-freeze": "node config/scripts/live-remote-bulk-open-freeze-repro.mjs",
     "repro:live-remote-realistic-freeze": "node config/scripts/live-remote-realistic-freeze-repro.mjs",
-    "tc:magi": "tsc --noEmit -p config/tsconfig.magi.json && tsc --noEmit -p config/tsconfig.node.json",
-    "test:magi": "python3 -m unittest discover -s resources/magi/tests -v",
-    "build:magi": "electron-vite build --config magi.vite.config.ts",
-    "release:magi:mac": "pnpm run build:magi && node config/scripts/stage-magi.cjs && node config/scripts/package-magi.cjs"
+    "tc:relay": "tsc --noEmit -p config/tsconfig.relay-app.json && tsc --noEmit -p config/tsconfig.node.json",
+    "test:relay": "python3 -m unittest discover -s resources/relay/tests -v",
+    "build:relay": "electron-vite build --config relay.vite.config.ts",
+    "release:relay:mac": "pnpm run build:relay && node config/scripts/stage-relay.cjs && node config/scripts/package-relay.cjs"
   },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "0.3.251",

@@ -181,4 +181,7 @@ tests/e2e/.cross-version-checkouts/
 # vendored gems.
 /mobile/vendor/
 
+/dist-relay/
+
+/resources/relay/bin/
 /dist-magi/

@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Report a reproducible Magi issue
+about: Report a reproducible Relay issue
 title: ''
 labels: bug
 ---
@@ -13,7 +13,7 @@ labels: bug
 
 ## Environment
 
-- Magi version:
+- Relay version:
 - macOS version and architecture:
 - Execution host: local / SSH (host OS)
 - Agent CLI and version, if relevant:

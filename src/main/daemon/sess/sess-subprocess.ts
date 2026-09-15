@@ -79,7 +79,7 @@ export async function createSessSubprocess(
       cols,
       rows,
       cwd,
-      env: { ...env, SESS_DIR: root, SESS_ATTACH_ONLY: '1', MAGI_NO_STATUS: '1' }
+      env: { ...env, SESS_DIR: root, SESS_ATTACH_ONLY: '1', RELAY_NO_STATUS: '1' }
     })
     proc = attached
     if (paused) {

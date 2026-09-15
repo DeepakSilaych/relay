@@ -1,0 +1,21 @@
+name: Relay backend
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['resources/relay/backend/**', 'resources/relay/tests/*.py', '.github/workflows/relay-backend.yml']
+  pull_request:
+    paths: ['resources/relay/backend/**', 'resources/relay/tests/*.py', '.github/workflows/relay-backend.yml']
+permissions:
+  contents: read
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: sudo apt-get update && sudo apt-get install -y tmux
+      - run: python3 -m unittest discover -s resources/relay/tests -v

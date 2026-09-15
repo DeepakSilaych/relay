@@ -1,0 +1,46 @@
+appId: me.deepaksilaych.relay
+productName: Relay
+artifactName: Relay-${version}-${arch}.${ext}
+extraMetadata:
+  relayAutoUpdate: false
+  name: relay
+  version: 0.3.0
+  main: out/relay/main/index.js
+npmRebuild: false
+directories:
+  app: out/relay-package
+  output: dist-relay
+files:
+  - out/relay/**
+  - package.json
+  - LICENSE
+extraResources:
+  - from: resources/relay/backend
+    to: relay/backend
+    filter:
+      - relay.py
+      - sess-legacy
+      - SESS-LICENSE
+  - from: resources/relay/bin
+    to: relay/bin
+asarUnpack:
+  - '**/node-pty/**'
+mac:
+  identity: "-"
+  hardenedRuntime: true
+  entitlements: resources/relay/entitlements.mac.plist
+  entitlementsInherit: resources/relay/entitlements.mac.plist
+  icon: resources/relay/brand/icon.icns
+  category: public.app-category.developer-tools
+  target:
+    - dmg
+    - zip
+win:
+  target: nsis
+linux:
+  category: Development
+  target: AppImage
+publish:
+  provider: github
+  owner: DeepakSilaych
+  repo: relay

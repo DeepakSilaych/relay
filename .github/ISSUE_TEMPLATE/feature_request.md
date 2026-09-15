@@ -1,6 +1,6 @@
 ---
 name: Improvement request
-about: Improve an existing Magi workflow
+about: Improve an existing Relay workflow
 title: ''
 labels: enhancement
 ---
