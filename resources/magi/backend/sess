@@ -306,7 +306,9 @@ cmd_attach() {
     fi
 
     # Attach — returns on detach (Ctrl+b d) or when session is killed
-    tmux attach-session -t "$session" || true
+    local -a terminal_flags=()
+    [[ -n "${SESS_TERMINAL_FEATURES:-}" ]] && terminal_flags=(-T "$SESS_TERMINAL_FEATURES")
+    tmux "${terminal_flags[@]}" attach-session -t "$session" || true
 
     # Classify how this ended
     if tmux has-session -t "$session" 2>/dev/null; then

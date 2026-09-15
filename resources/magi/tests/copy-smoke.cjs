@@ -72,6 +72,42 @@ const fixture = fs.mkdtempSync(path.join(os.tmpdir(), 'magi-copy-qa-')),
       .toBe('on')
     const session = JSON.stringify([remote, ws.id, t.id]),
       sample = 'VM_COPY_SELECTION_123'
+    await app.evaluate(({ shell }) => {
+      global.urls = []
+      shell.openExternal = async (url) => {
+        global.urls.push(url)
+      }
+    })
+    await p.evaluate(
+      ({ session }) =>
+        window.magi.write(
+          session,
+          "printf '\\033[38;2;17;129;203mVM_TRUECOLOR\\033[0m\\n\\033]8;;https://example.com/vm-native\\033\\\\VM_NATIVE_LINK\\033]8;;\\033\\\\\\n'\r"
+        ),
+      { session }
+    )
+    const rgb = p
+      .locator('.xterm-rows > div span')
+      .filter({ hasText: /^VM_TRUECOLOR$/ })
+      .last()
+    await expect
+      .poll(() => rgb.evaluate((e) => getComputedStyle(e).color))
+      .toBe('rgb(17, 129, 203)')
+    const native = p
+      .locator('.xterm-rows > div span')
+      .filter({ hasText: /^VM_NATIVE_LINK$/ })
+      .last()
+    await expect(native).toBeVisible()
+    const nativeBox = await native.boundingBox()
+    await p.keyboard.down(process.platform === 'darwin' ? 'Meta' : 'Control')
+    await p.mouse.move(nativeBox.x + 3, nativeBox.y + nativeBox.height / 2)
+    await expect.poll(() => p.locator('.xterm-cursor-pointer').count()).toBe(1)
+    await p.mouse.click(nativeBox.x + 3, nativeBox.y + nativeBox.height / 2)
+    await p.keyboard.up(process.platform === 'darwin' ? 'Meta' : 'Control')
+    await expect
+      .poll(() => app.evaluate(() => global.urls))
+      .toEqual(['https://example.com/vm-native'])
+
     await p.evaluate(
       ({ session, sample }) =>
         window.magi.write(session, `printf '\\033[?1000h\\033[?1006h\\n${sample}\\n'\r`),
@@ -147,7 +183,7 @@ const fixture = fs.mkdtempSync(path.join(os.tmpdir(), 'magi-copy-qa-')),
     ).toBe(false)
     ssh(`tmux send-keys -t '=magi-${t.id}:' -X cancel`)
     console.log(
-      'PASS: actual VM drag selection under application mouse capture + Cmd-C and native Edit Copy verified against system clipboard; Ctrl-C still interrupts; VM path copying works; wheel enters tmux history without sending arrow keys.'
+      'PASS: VM truecolor and native hyperlinks; actual VM drag selection under application mouse capture + Cmd-C and native Edit Copy verified against system clipboard; Ctrl-C still interrupts; VM path copying works; wheel enters tmux history without sending arrow keys.'
     )
   } finally {
     for (const host of ['local', ...(remoteReady ? [remote] : [])]) {

@@ -12,6 +12,10 @@ const fixture = fs.mkdtempSync(path.join(os.tmpdir(), 'magi-links-qa-'))
     env: {
       ...process.env,
       ORCA_BACKGROUND_LAUNCH: '1',
+      NO_COLOR: '1',
+      FORCE_COLOR: '0',
+      CLICOLOR: '0',
+      CI: '1',
       MAGI_ROOT: `${fixture}/root`,
       MAGI_USER_DATA_PATH: `${fixture}/profile`
     }
@@ -85,6 +89,94 @@ const fixture = fs.mkdtempSync(path.join(os.tmpdir(), 'magi-links-qa-'))
     await expect
       .poll(() => app.evaluate(() => global.urls))
       .toEqual(['https://example.com/magi', 'http://localhost:3000/test'])
+    const script = path.join(ws.path, 'capabilities.sh')
+    const output = path.join(ws.path, 'capabilities.json')
+    fs.writeFileSync(
+      script,
+      `#!/bin/sh
+python3 -c 'import os,json; print(json.dumps({k:os.environ.get(k) for k in ["NO_COLOR","CI","FORCE_COLOR","CLICOLOR","COLORTERM","TERM_PROGRAM","FORCE_HYPERLINK"]}))' > '${output}'
+printf '\\033[31mRELAY_RED\\033[0m\\n'
+printf '\\033[38;2;17;129;203mRELAY_RGB\\033[0m\\n'
+printf '\\033]8;;https://example.com/native-target\\033\\\\Native hyperlink label\\033]8;;\\033\\\\\\n'
+printf '  ENG-42 (https://          IN REVIEW    Other column\\n  linear.app/example/      other-column\\n  issue/ENG-42)\\n'
+`
+    )
+    await p.evaluate(({ key, script }) => window.magi.write(key, `sh '${script}'\r`), {
+      key,
+      script
+    })
+    await expect
+      .poll(() => fs.existsSync(output) && fs.readFileSync(output, 'utf8').includes('}'))
+      .toBe(true)
+    expect(JSON.parse(fs.readFileSync(output, 'utf8'))).toEqual({
+      NO_COLOR: null,
+      CI: null,
+      FORCE_COLOR: null,
+      CLICOLOR: null,
+      COLORTERM: 'truecolor',
+      TERM_PROGRAM: 'tmux',
+      FORCE_HYPERLINK: '1'
+    })
+    await expect(rowFor('RELAY_RED')).toContainText('RELAY_RED')
+    const red = rowFor('RELAY_RED').locator('span').filter({ hasText: 'RELAY_RED' }).first()
+    expect(await red.evaluate((e) => getComputedStyle(e).color)).not.toBe(
+      await p.locator('.xterm').evaluate((e) => getComputedStyle(e).color)
+    )
+    const rgb = rowFor('RELAY_RGB').locator('span').filter({ hasText: 'RELAY_RGB' }).first()
+    await expect
+      .poll(() => rgb.evaluate((e) => getComputedStyle(e).color))
+      .toBe('rgb(17, 129, 203)')
+    for (const [label, expected] of [
+      ['Native hyperlink label', 'https://example.com/native-target'],
+      ['ENG-42 (https://', 'https://linear.app/example/issue/ENG-42'],
+      ['linear.app/example/', 'https://linear.app/example/issue/ENG-42'],
+      ['issue/ENG-42)', 'https://linear.app/example/issue/ENG-42']
+    ]) {
+      pos = await point(label === 'ENG-42 (https://' ? 'https://' : label)
+      // The scheme also appears in the shell command; select the rendered table row explicitly.
+      if (label === 'ENG-42 (https://') {
+        const table = await rowFor(label).boundingBox()
+        const first = await point('linear.app/example/')
+        const cols = Number(
+          execFileSync('tmux', [
+            'display-message',
+            '-p',
+            '-t',
+            `=magi-${t.id}:`,
+            '#{pane_width}'
+          ]).toString()
+        )
+        const screen = await p.locator('.xterm-screen').boundingBox()
+        pos = { x: first.x + (8 * screen.width) / cols, y: table.y + table.height / 2 }
+      }
+      await p.keyboard.down(mod)
+      await p.mouse.move(pos.x, pos.y)
+      await expect.poll(() => p.locator('.xterm-cursor-pointer').count()).toBe(1)
+      const count = (await app.evaluate(() => global.urls)).length
+      await p.mouse.click(pos.x, pos.y)
+      await p.keyboard.up(mod)
+      await expect.poll(() => app.evaluate(() => global.urls)).toHaveLength(count + 1)
+      expect((await app.evaluate(() => global.urls)).at(-1)).toBe(expected)
+    }
+    pos = await point('Other column')
+    await p.keyboard.down(mod)
+    await p.mouse.move(pos.x, pos.y)
+    await expect.poll(() => p.locator('.xterm-cursor-pointer').count()).toBe(0)
+    await p.keyboard.up(mod)
+    const wrappedUrl = 'https://example.com/' + 'segment/'.repeat(40) + 'wrapped-end'
+    fs.writeFileSync(script, `printf '%s\\n' '${wrappedUrl}'`)
+    await p.evaluate(({ key, script }) => window.magi.write(key, `sh '${script}'\r`), {
+      key,
+      script
+    })
+    await expect(rowFor('wrapped-end')).toContainText('wrapped-end')
+    pos = await point('wrapped-end')
+    await p.keyboard.down(mod)
+    await p.mouse.move(pos.x, pos.y)
+    await expect.poll(() => p.locator('.xterm-cursor-pointer').count()).toBe(1)
+    await p.mouse.click(pos.x, pos.y)
+    await p.keyboard.up(mod)
+    await expect.poll(() => app.evaluate(() => global.urls.at(-1))).toBe(wrappedUrl)
     for (const url of ['file:///tmp/example', 'javascript:alert(1)']) {
       const error = await p.evaluate(async (url) => {
         try {
@@ -116,7 +208,7 @@ const fixture = fs.mkdtempSync(path.join(os.tmpdir(), 'magi-links-qa-'))
     await expect(p.getByRole('button', { name: 'Close notes.md', exact: true })).toHaveCount(0)
     await expect(p.getByRole('button', { name: 'Close other.txt', exact: true })).toBeVisible()
     console.log(
-      'PASS: Cmd-click HTTP/HTTPS browser routing and blocked unsafe protocols, file link validation and file tab, Genral file browser, independent file tab switching and closing.'
+      'PASS: inherited NO_COLOR removed, ANSI and truecolor rendered, native OSC 8 links, full-width and table-wrapped URLs, modifier gating, safe protocols, and file tab routing.'
     )
   } finally {
     for (const w of (await request('snapshot')).workspaces) {

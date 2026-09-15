@@ -512,7 +512,8 @@ class Backend:
             state_dir.mkdir(parents=True, exist_ok=True)
             state = {"SESS_SESSION": session, "SESS_CWD": t["cwd"], "SESS_BRANCH": "main", "SESS_CREATED": str(int(time.time()))}
             (state_dir / "state").write_text("\n".join(k + "=" + shlex.quote(v) for k, v in state.items()) + "\n")
-            env = dict(os.environ, MAGI_ROOT=str(self.root), MAGI_WORKSPACE=workspace, SESS_DIR=str(sess_dir), TERM="xterm-256color")
+            capabilities = {"TERM": "xterm-256color", "COLORTERM": "truecolor", "TERM_PROGRAM": "Relay", "TERM_PROGRAM_VERSION": VERSION, "FORCE_HYPERLINK": "1"}
+            env = dict(os.environ, MAGI_ROOT=str(self.root), MAGI_WORKSPACE=workspace, SESS_DIR=str(sess_dir), **capabilities)
             env["PATH"] = str(self.root / "utils" / "bin") + os.pathsep + env.get("PATH", "")
             check = subprocess.run(["tmux", "has-session", "-t", "=" + session], capture_output=True)
             if check.returncode:
@@ -525,8 +526,10 @@ class Backend:
                 self.save_ws(ws)
                 shell = os.environ.get("SHELL", "/bin/bash")
                 args = ["tmux", "new-session", "-d", "-s", session, "-c", t["cwd"]]
-                for k in ("MAGI_ROOT", "MAGI_WORKSPACE", "PATH", "TERM"):
+                for k in ("MAGI_ROOT", "MAGI_WORKSPACE", "PATH", *capabilities):
                     args += ["-e", k + "=" + env[k]]
+                # Clean the pane environment too: an existing tmux server retains its launcher environment.
+                args += ["env", "-u", "NO_COLOR", "-u", "CI", "-u", "FORCE_COLOR", "-u", "CLICOLOR"]
                 resume = t.get("agent_resume")
                 if resume:
                     agent = resume.get("agent")
@@ -545,7 +548,7 @@ class Backend:
             run(["tmux", "set-option", "-t", session, "mouse", "on"])
             # sess handles attach/persistence, using isolated state with no default remote.
             sess = self.root / "utils" / "magi" / "sess"
-            return {"program": "bash", "args": [str(sess), "attach", session], "env": {"SESS_DIR": str(sess_dir), "MAGI_ROOT": str(self.root), "MAGI_WORKSPACE": workspace, "MAGI_NO_STATUS": "1", "SESS_ATTACH_ONLY": "1", "PATH": env["PATH"], "TERM": "xterm-256color"}, "cwd": t["cwd"]}
+            return {"program": "bash", "args": [str(sess), "attach", session], "env": {"SESS_DIR": str(sess_dir), "MAGI_ROOT": str(self.root), "MAGI_WORKSPACE": workspace, "MAGI_NO_STATUS": "1", "SESS_ATTACH_ONLY": "1", "PATH": env["PATH"], "SESS_TERMINAL_FEATURES": "RGB,hyperlinks", **capabilities}, "cwd": t["cwd"]}
 
     def terminal_remove(self, workspace, terminal, **_):
         with self.lock():

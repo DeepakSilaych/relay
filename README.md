@@ -102,7 +102,7 @@ Paste a ticket ID or full Linear issue URL when creating a workspace or attachin
 - **Right:** repository files and source control with colored status icons.
 - **Bottom:** host status, repository changes, PRs and the linked Linear issue.
 
-Sidebars and split panes resize by dragging. Selected names can be renamed by clicking again or using the context menu. Cmd-click opens HTTP/HTTPS links in the browser and existing file paths in a tab. Normal dragging selects terminal text locally, even when agents capture mouse input; Option/Alt sends mouse gestures to the application. Cmd+C copies; Ctrl+C interrupts.
+Sidebars and split panes resize by dragging. Selected names can be renamed by clicking again or using the context menu. Cmd-click opens HTTP/HTTPS links in the browser and existing file paths in a tab. Native terminal hyperlinks and URLs wrapped across terminal lines or parenthesized table cells open their complete targets. New terminals advertise true-color and hyperlink support, and discard color-disabling variables inherited from the app launcher; shell startup files can still override those defaults. Normal dragging selects terminal text locally, even when agents capture mouse input; Option/Alt sends mouse gestures to the application. Cmd+C copies; Ctrl+C interrupts.
 
 ## Keyboard shortcuts
 

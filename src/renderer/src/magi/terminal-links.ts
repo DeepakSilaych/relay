@@ -1,3 +1,4 @@
+import { tableLinks, fragmentRange } from './terminal-table-links'
 import type { Terminal, ILink, IBufferRange } from '@xterm/xterm'
 import { extractTerminalFileLinkCandidates } from '@/lib/terminal-links'
 import type { OpenFile } from './editor'
@@ -131,7 +132,46 @@ export function installTerminalLinks(
       })
       const links: ILink[] = [],
         urls: [number, number][] = []
+      const tableRows: string[] = [],
+        tablePositions: { x: number; y: number }[][] = []
+      for (let y = Math.max(0, row - 9); y < Math.min(buffer.length, row + 8); y++) {
+        const line = buffer.getLine(y)
+        let value = ''
+        const cells: { x: number; y: number }[] = []
+        for (let x = 0; line && x < Math.min(line.length, 1000); x++) {
+          const cell = line.getCell(x)
+          if (!cell || cell.getWidth() === 0) {
+            continue
+          }
+          const chars = cell.getChars() || ' '
+          for (let i = 0; i < chars.length; i++) {
+            cells.push({ x: x + 1, y: y + 1 })
+          }
+          value += chars
+        }
+        tableRows.push(value)
+        tablePositions.push(cells)
+      }
+      const tableRanges: IBufferRange[] = []
+      for (const candidate of tableLinks(tableRows)) {
+        for (const fragment of candidate.fragments) {
+          const area = fragmentRange(fragment, tablePositions)
+          tableRanges.push(area)
+          if (area.start.y === row) {
+            links.push(link(candidate.url, area, () => window.magi.openExternal(candidate.url)))
+          }
+        }
+      }
+      const inTable = (from: number, to: number) =>
+        tableRanges.some((area) =>
+          positions
+            .slice(from, to)
+            .some((pos) => pos.y === area.start.y && pos.x >= area.start.x && pos.x <= area.end.x)
+        )
       for (const match of text.matchAll(/https?:\/\/[^\s<>"'`]+/g)) {
+        if (inTable(match.index, match.index + match[0].length)) {
+          continue
+        }
         const url = match[0].replace(/[.,;!?)\]]+$/, '')
         urls.push([match.index, match.index + match[0].length])
         links.push(
@@ -141,6 +181,7 @@ export function installTerminalLinks(
         )
       }
       const candidates = extractTerminalFileLinkCandidates(text)
+        .filter((c) => !inTable(c.startIndex, c.endIndex))
         .filter((c) => !urls.some(([start, end]) => c.startIndex < end && c.endIndex > start))
         .slice(0, 64)
       if (!candidates.length) {

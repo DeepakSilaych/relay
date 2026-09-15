@@ -1,3 +1,4 @@
+import { removeInheritedNoColor } from '../pty/terminal-color-env'
 import { operations } from './operations'
 import { configureHomebrewPath } from './homebrew-path'
 import { createUpdates } from './updates'
@@ -101,6 +102,8 @@ if (ownsLock) {
           (entry): entry is [string, string] => typeof entry[1] === 'string'
         )
       )
+      removeInheritedNoColor(env)
+      delete env.CI
       delete env.TMUX
       delete env.TMUX_PANE
       if (generation !== generations.get(key)) {
@@ -114,7 +117,15 @@ if (ownsLock) {
           cols: size(cols, 500),
           rows: size(rows, 300),
           cwd: host ? app.getPath('home') : prepared.cwd,
-          env: { ...env, ...(host ? {} : prepared.env), TERM: 'xterm-256color' }
+          env: {
+            ...env,
+            ...(host ? {} : prepared.env),
+            TERM: 'xterm-256color',
+            COLORTERM: 'truecolor',
+            TERM_PROGRAM: 'Relay',
+            TERM_PROGRAM_VERSION: app.getVersion(),
+            FORCE_HYPERLINK: '1'
+          }
         }
       )
       terminals.set(key, pty)
