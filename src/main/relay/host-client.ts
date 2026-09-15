@@ -88,7 +88,7 @@ class HostClient {
         `${JSON.stringify({
           root: host.root,
           files: Object.fromEntries(
-            ['relay.py', 'sess-legacy', 'SESS-LICENSE'].map((name) => [
+            ['relay.py', 'sess-legacy', 'SESS-LICENSE', 'RELAY-CLI.md'].map((name) => [
               name,
               readFileSync(join(resources, name), 'utf8')
             ])

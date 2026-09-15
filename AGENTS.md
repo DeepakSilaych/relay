@@ -1,3 +1,7 @@
+# Relay project scope
+
+This repository builds Relay, the multi-repository terminal workspace app. Orca is its upstream ancestry, not the runtime to invoke. Use `relay`, not `orca-ide`, for Relay workspace and terminal operations. Read `resources/relay/skills/relay-cli/SKILL.md` for the supported CLI. References below to Orca internals describe inherited source architecture and do not require an installed Orca application or its orchestration skill.
+
 # Design System
 
 All UI work — layout, color, typography, spacing, component selection, UX behavior — must follow [`docs/STYLEGUIDE.md`](./docs/STYLEGUIDE.md). Use the tokens defined in `src/renderer/src/assets/main.css` (the canonical source) and the shadcn primitives in `src/renderer/src/components/ui/`. Don't invent new color values, font sizes, or shadow tiers when a documented one already covers the role. When STYLEGUIDE.md is silent, follow the resolution order in its final section.

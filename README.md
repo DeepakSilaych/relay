@@ -120,6 +120,19 @@ Use Cmd on macOS; Ctrl on Linux.
 
 Splits can nest. Drag their dividers to resize; layouts and order survive restart. Closing an individual pane ends that session. Archiving an empty workspace retains its worktrees; Genral cannot be archived.
 
+## Agent CLI
+
+Relay's CLI is separate from Orca. It does not require `orca-ide` or implement Orca's orchestration protocol. For a persistent agent launch:
+
+```sh
+relay workspace list --json
+relay --workspace WORKSPACE_ID terminal run --name Review --command 'codex' --json
+relay --workspace WORKSPACE_ID terminal read --terminal TERMINAL_ID --json
+relay --workspace WORKSPACE_ID terminal send --terminal TERMINAL_ID --input-text 'Review this change' --enter --json
+```
+
+Use `terminal run` for headless launches; `terminal new` only adds a tab. Separate calls can start concurrent terminals. See the [agent CLI skill](resources/relay/skills/relay-cli/SKILL.md) for supervision, cleanup, and capability limits.
+
 ## Development
 
 ```sh

@@ -19,7 +19,7 @@ import time
 import uuid
 from urllib.parse import urlsplit, unquote
 
-VERSION = "0.3.0"
+VERSION = "0.3.1"
 DEFAULT_PREFERENCES = {
     "theme": "graphite", "accent": "mint", "font_family": "system",
     "font_size": 13, "line_height": 1.35, "terminal_padding": 18,
@@ -407,7 +407,12 @@ class Backend:
         return {"workspace": self.ws(wid), "errors": errors}
 
     def context(self, ws):
-        lines = ["# Relay workspace: " + ws["name"], "", "Run agents from this workspace. Each task repository must be attached before editing.",
+        lines = ["# Relay workspace: " + ws["name"], "", "This is a Relay workspace. Use the `relay` CLI, not `orca`, `orca-ide`, or Orca orchestration skills.",
+                 "Read the CLI guide at " + str(self.root / "utils" / "relay" / "RELAY-CLI.md") + ".",
+                 "Relay is a separate application; Orca ancestry does not imply its orchestration runtime is installed.",
+                 "Run agents from this workspace. Each task repository must be attached before editing.",
+                 "Start a persistent agent: `relay --workspace " + ws["id"] + " terminal run --name Review --command 'codex' --json`.",
+                 "Inspect output with `relay --workspace " + ws["id"] + " terminal read --terminal ID --json`; send input with `terminal send --terminal ID --input-text TEXT --enter`.",
                  "Use `relay repo attach NAME --new-branch task/NAME --base HEAD --json` to create a worktree.",
                  "Edit only the returned worktree path. Do not edit canonical clones for task work.",
                  "A Git worktree is isolation by convention, not a security sandbox.", "", "## Attached repositories"]
@@ -478,15 +483,46 @@ class Backend:
             self.save_ws(ws)
         return {"archived": True, "retained": "All worktrees and terminal processes are retained"}
 
-    def terminal_new(self, workspace, name="", cwd="", **_):
+    def terminal_new(self, workspace, name="", cwd="", command="", **_):
         with self.lock():
             ws = self.ws(workspace)
             path = within(ws["path"], cwd) if cwd else Path(ws["path"])
             if not path.is_dir(): raise ValueError("Terminal directory does not exist")
             t = {"id": uuid.uuid4().hex[:12], "name": name or ("Terminal " + str(len(ws["terminals"]) + 1)), "cwd": str(path)}
+            if command: t["launch_command"] = command
             ws["terminals"].append(t)
             self.save_ws(ws)
             return t
+
+    def terminal_run(self, workspace, command, name="", cwd="", **_):
+        if not isinstance(command, str) or not command.strip() or len(command) > 65536 or "\x00" in command:
+            raise ValueError("Provide a nonempty shell command, at most 64 KiB")
+        terminal = self.terminal_new(workspace, name, cwd, command)
+        self.terminal_prepare(workspace, terminal["id"])
+        return {"terminal": terminal, "session": session_name(terminal["id"]), "state": "live"}
+
+    def terminal_target(self, workspace, terminal):
+        if not any(t["id"] == terminal for t in self.ws(workspace)["terminals"]):
+            raise ValueError("Terminal does not belong to this workspace")
+        target = "=" + session_name(terminal) + ":"
+        if subprocess.run(["tmux", "has-session", "-t", target], capture_output=True).returncode:
+            raise ValueError("Terminal session is not live")
+        return target
+
+    def terminal_read(self, workspace, terminal, lines=200, **_):
+        lines = int(lines)
+        if not 1 <= lines <= 10000: raise ValueError("lines must be between 1 and 10000")
+        target = self.terminal_target(workspace, terminal)
+        output = text(run(["tmux", "capture-pane", "-p", "-J", "-t", target, "-S", str(-lines)]))
+        return {"terminal": terminal, "state": "live", "output": output}
+
+    def terminal_send(self, workspace, terminal, input_text="", enter=False, **_):
+        if not isinstance(input_text, str) or len(input_text) > 65536 or "\x00" in input_text:
+            raise ValueError("Terminal input must be text, at most 64 KiB")
+        target = self.terminal_target(workspace, terminal)
+        if input_text: run(["tmux", "send-keys", "-t", target, "-l", "--", input_text])
+        if enter: run(["tmux", "send-keys", "-t", target, "Enter"])
+        return {"sent": len(input_text), "enter": bool(enter)}
 
     def workspace_reorder(self, ids, **_):
         with self.lock():
@@ -584,7 +620,9 @@ class Backend:
                 # Clean the pane environment too: an existing tmux server retains its launcher environment.
                 args += ["env", "-u", "NO_COLOR", "-u", "CI", "-u", "FORCE_COLOR", "-u", "CLICOLOR"]
                 resume = t.get("agent_resume")
-                if resume:
+                if t.get("launch_command"):
+                    args += [shell, "-lic", t["launch_command"] + "; exec " + shlex.quote(shell) + " -l"]
+                elif resume:
                     agent = resume.get("agent")
                     if agent not in ("codex", "claude"): raise ValueError("Unsupported imported agent")
                     session_id = resume.get("session_id")
@@ -620,7 +658,7 @@ class Backend:
     def install_cli(self):
         folder = self.root / "utils" / "relay"
         folder.mkdir(parents=True, exist_ok=True)
-        for filename in ("relay.py", "sess-legacy", "SESS-LICENSE"):
+        for filename in ("relay.py", "sess-legacy", "SESS-LICENSE", "RELAY-CLI.md"):
             src = Path(__file__).resolve().parent / filename
             dest = folder / filename
             if src != dest and (not dest.exists() or src.read_bytes() != dest.read_bytes()): shutil.copy2(src, dest)
@@ -842,7 +880,7 @@ class Backend:
         return result
 
     def dispatch(self, op, args=None):
-        allowed = {"resolve_links", "file_info", "terminal_cwd", "terminal_split", "terminal_resize", "terminal_reorder", "workspace_reorder", "snapshot", "preferences_get", "preferences_set", "host_add", "repo_register", "branches", "workspace_create", "repo_attach", "workspace_archive", "workspace_rename", "terminal_rename", "terminal_new", "terminal_prepare", "terminal_remove", "status", "files", "file", "diff", "diff_content", "git_action", "ticket_attach", "integrations", "install_cli"}
+        allowed = {"terminal_run", "terminal_read", "terminal_send", "resolve_links", "file_info", "terminal_cwd", "terminal_split", "terminal_resize", "terminal_reorder", "workspace_reorder", "snapshot", "preferences_get", "preferences_set", "host_add", "repo_register", "branches", "workspace_create", "repo_attach", "workspace_archive", "workspace_rename", "terminal_rename", "terminal_new", "terminal_prepare", "terminal_remove", "status", "files", "file", "diff", "diff_content", "git_action", "ticket_attach", "integrations", "install_cli"}
         if op not in allowed: raise ValueError("Unknown operation: " + op)
         return getattr(self, op)(**(args or {}))
 
@@ -857,7 +895,7 @@ def rpc(backend):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Relay — multi-repo agent workspaces")
+    parser = argparse.ArgumentParser(description="Relay — multi-repo agent workspaces", epilog="Commands: workspace list/create/rename/archive; repo register/attach/list; terminal new/run/read/send/remove/split/rename; ticket attach; host add. Run a persistent command with: relay --workspace ID terminal run --name Review --command 'codex' --json. Read output: relay --workspace ID terminal read --terminal ID --json. Send input: terminal send --terminal ID --input-text TEXT [--enter]. Relay does not implement Orca orchestration or orca-ide.")
     parser.add_argument("--version", action="version", version="Relay " + VERSION)
     parser.add_argument("--root", default=os.environ.get("RELAY_ROOT") or os.environ.get("MAGI_ROOT"))
     parser.add_argument("--workspace", default=os.environ.get("RELAY_WORKSPACE") or os.environ.get("MAGI_WORKSPACE"))
@@ -868,16 +906,16 @@ def main():
     args, extras = parser.parse_known_args()
     if args.rpc: return rpc(Backend(args.root))
     sub = argparse.ArgumentParser(add_help=False)
-    for opt in ("repo", "branch", "new-branch", "base", "path", "url", "name", "terminal", "axis", "host", "ssh", "cwd", "scope", "directory", "message"):
+    for opt in ("repo", "branch", "new-branch", "base", "path", "url", "name", "terminal", "axis", "host", "ssh", "cwd", "scope", "directory", "message", "command", "input-text", "lines"):
         sub.add_argument("--" + opt)
-    for opt in ("blank", "utility"):
+    for opt in ("blank", "utility", "enter"):
         sub.add_argument("--" + opt, action="store_true")
     options = vars(sub.parse_args(extras))
     options = {k: v for k, v in options.items() if v is not None and v is not False}
     words = args.words
     if not words: parser.print_help(); return
     backend = Backend(args.root)
-    commands = {("terminal", "split"): "terminal_split",("workspace", "rename"): "workspace_rename", ("terminal", "rename"): "terminal_rename", ("workspace", "list"): "snapshot", ("workspace", "create"): "workspace_create", ("workspace", "archive"): "workspace_archive", ("repo", "register"): "repo_register", ("repo", "attach"): "repo_attach", ("repo", "list"): "snapshot", ("terminal", "new"): "terminal_new", ("ticket", "attach"): "ticket_attach", ("host", "add"): "host_add"}
+    commands = {("terminal", "run"): "terminal_run", ("terminal", "read"): "terminal_read", ("terminal", "send"): "terminal_send", ("terminal", "remove"): "terminal_remove", ("terminal", "split"): "terminal_split",("workspace", "rename"): "workspace_rename", ("terminal", "rename"): "terminal_rename", ("workspace", "list"): "snapshot", ("workspace", "create"): "workspace_create", ("workspace", "archive"): "workspace_archive", ("repo", "register"): "repo_register", ("repo", "attach"): "repo_attach", ("repo", "list"): "snapshot", ("terminal", "new"): "terminal_new", ("ticket", "attach"): "ticket_attach", ("host", "add"): "host_add"}
     op = commands.get(tuple(words[:2]), words[0])
     positional = words[2:]
     if args.workspace: options["workspace"] = args.workspace
@@ -905,7 +943,7 @@ if old.is_symlink() and old.resolve()==r and previous.exists() and not previous.
 d.mkdir(parents=True,exist_ok=True)
 [(d/k).write_text(v) for k,v in p['files'].items()]
 os.execv(sys.executable,[sys.executable,'-u',str(d/'relay.py'),'--root',str(r),'--rpc'])"""
-            files = {f: (Path(__file__).parent / f).read_text() for f in ("relay.py", "sess-legacy", "SESS-LICENSE")}
+            files = {f: (Path(__file__).parent / f).read_text() for f in ("relay.py", "sess-legacy", "SESS-LICENSE", "RELAY-CLI.md")}
             payload = json.dumps({"root": h["root"], "files": files}) + "\n" + json.dumps({"op": op, "args": options}) + "\n"
             p = subprocess.run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=8", "-o", "ServerAliveInterval=5", "-o", "ServerAliveCountMax=2", "--", h["ssh"], "python3 -u -c " + shlex.quote(bootstrap)], input=payload, capture_output=True, text=True, timeout=180)
             if p.returncode: raise ValueError(p.stderr.strip() or "SSH backend failed")
